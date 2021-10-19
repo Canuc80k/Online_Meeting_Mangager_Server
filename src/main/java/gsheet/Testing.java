@@ -1,4 +1,5 @@
 package gsheet;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,10 +27,19 @@ public class Testing {
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
-    private static final List<String> SCOPES =
-            Arrays.asList(SheetsScopes.SPREADSHEETS,SheetsScopes.DRIVE);
+    /**
+     * Global instance of the scopes required by this quickstart.
+     * If modifying these scopes, delete your previously saved tokens/ folder.
+     */
+    private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
+    /**
+     * Creates an authorized Credential object.
+     * @param HTTP_TRANSPORT The network HTTP Transport.
+     * @return An authorized Credential object.
+     * @throws IOException If the credentials.json file cannot be found.
+     */
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
         // Load client secrets.
         InputStream in = Testing.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
@@ -49,12 +58,30 @@ public class Testing {
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
-    public static void main(String[] args) throws IOException, GeneralSecurityException {
+    /**
+     * Prints the names and majors of students in a sample spreadsheet:
+     * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+     */
+    public static void main(String... args) throws IOException, GeneralSecurityException {
+        // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        final String spreadsheetId = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms";
+        final String range = "Class Data!A2:E";
         Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-
-        new SpreadsheetSnippets(service).create("Quang dep trai");
+        ValueRange response = service.spreadsheets().values()
+                .get(spreadsheetId, range)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        if (values == null || values.isEmpty()) {
+            System.out.println("No data found.");
+        } else {
+            System.out.println("Name, Major");
+            for (List row : values) {
+                // Print columns A and E, which correspond to indices 0 and 4.
+                System.out.printf("%s, %s\n", row.get(0), row.get(4));
+            }
+        }
     }
 }
