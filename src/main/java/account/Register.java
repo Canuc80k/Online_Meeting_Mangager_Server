@@ -1,70 +1,74 @@
 package account;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import general_function.FileTool;
+import com.google.api.services.sheets.v4.model.ValueRange;
+
+import gsheet.SpreadSheetSnippets;
 
 public class Register {
-	private static final String CURRENT_AVAILABLE_USER_ACCOUNT_ID_FILE_PATH = "user_accounts/current_available_user_account_id";
-	private static final String USER_ACCOUNT_SPECIFIED_DATA_FOLDER_PATH = "user_accounts/user_account_specified_data/";
-
-	private static String current_available_user_account_id;
-	private static String register_account_name, register_account_pass;
+	private static String spreadSheetID;
 	
-	public static boolean register(String register_account_name_and_pass) throws Exception {
-		if (!(new File(CURRENT_AVAILABLE_USER_ACCOUNT_ID_FILE_PATH).exists())) FileTool.write_file("", CURRENT_AVAILABLE_USER_ACCOUNT_ID_FILE_PATH);
+	public static boolean register(String register_data) throws Exception {
+		register_data = register_data.trim();
+		spreadSheetID = SpreadSheetSnippets.get_spread_sheet_id();
+        
+		boolean register_successful = false;		
+		if (!is_account_exist(register_data)) {
+			try {
+				String previous_index = get_previous_index();
+				String current_index = String.valueOf(Integer.parseInt(previous_index) + 1);
+				List<Object> register_data_list = Arrays.asList(register_data.split("\n"));
 
-		boolean register_successful = false;
-		init(register_account_name_and_pass);
-		if (check_register(register_account_name_and_pass)) {
-			create_user_account_specified_data_file(current_available_user_account_id);
-			update_current_available_id(current_available_user_account_id);
-			register_successful = true;
-		}
-		else register_successful = false;
+				List<Object> new_row = new ArrayList<Object>();
+				new_row.add(current_index);
+				for (int i = 0; i < register_data_list.size(); i ++) 
+					new_row.add(register_data_list.get(i));
+				
+				List<List<Object>> values = new ArrayList<List<Object>>();
+				values.add(new_row);
+
+				final String range = "User Account Database";
+		        SpreadSheetSnippets.appendValues(spreadSheetID, range, "RAW", values);
+		        register_successful = true;
+			} catch(Exception e) {}
+		} 
+		
 		return register_successful;
 	}
 	
-	public static void init(String register_account_name_and_pass) throws Exception {
-		current_available_user_account_id = FileTool.read_file(CURRENT_AVAILABLE_USER_ACCOUNT_ID_FILE_PATH).trim();
-		if (current_available_user_account_id == null || current_available_user_account_id.equals("")) current_available_user_account_id = "00000";
-		
-		register_account_name = Arrays.asList(register_account_name_and_pass.split(" ")).get(0).trim();
-		register_account_pass = Arrays.asList(register_account_name_and_pass.split(" ")).get(1).trim();
+	public static boolean is_account_exist(String register_data) throws Exception {
+		List<String> register_data_list = Arrays.asList(register_data.split("\n"));
+		String username = register_data_list.get(0).trim();
+
+		final String range = "User Account Database!A2:L";
+        ValueRange response = SpreadSheetSnippets.getService().spreadsheets().values()
+                .get(SpreadSheetSnippets.get_spread_sheet_id(), range)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        
+        if (values == null) return false;
+        for (List<Object> row : values) 
+        	if (row.get(1).toString().equals(username)) 
+        		return true;
+   
+        return false;
 	}
 	
-	public static boolean check_register(String register_account_name_and_pass) throws Exception {	
-		boolean able_to_register = true;
+	public static String get_previous_index() throws Exception {
+		String id;
 		
-		File[] files = new File(USER_ACCOUNT_SPECIFIED_DATA_FOLDER_PATH).listFiles();
-		for (File file : files) {
-		    if (file.isFile()) {
-		        String file_data = FileTool.read_file(USER_ACCOUNT_SPECIFIED_DATA_FOLDER_PATH + '/' + file.getName());
-		        List<String> file_data_list = Arrays.asList(file_data.split("\n"));
-		        
-		        if (file_data_list.get(0).trim().equals(register_account_name)) {
-		        	able_to_register = false;
-		        }
-		    }
-		}
-		
-		return able_to_register;
-	}
-	
+		final String range = "User Account Database!A2:L";
+        ValueRange response = SpreadSheetSnippets.getService().spreadsheets().values()
+                .get(SpreadSheetSnippets.get_spread_sheet_id(), range)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        
+        if (values == null) return "0";
+        id = values.get(values.size() - 1).get(0).toString();
 
-	public static void create_user_account_specified_data_file(String current_available_id) throws Exception {
-		String account_specified_data = "";
-		account_specified_data += register_account_name + '\n';
-		account_specified_data += register_account_pass + '\n';
-		account_specified_data += "Chưa Có Thông Tin\nChưa Có Thông Tin\nChưa Có Thông Tin\nChưa Có Thông Tin\nChưa Có Thông Tin\n";
-		
-		FileTool.write_file(account_specified_data, USER_ACCOUNT_SPECIFIED_DATA_FOLDER_PATH + '/' + current_available_id);
-	}
-
-	public static void update_current_available_id(String current_available_id) throws Exception {
-		String new_id = User_ID.get_next_user_account_id(current_available_id);
-		FileTool.write_file(new_id, CURRENT_AVAILABLE_USER_ACCOUNT_ID_FILE_PATH);
+        return id;
 	}
 }
