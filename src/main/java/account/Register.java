@@ -13,7 +13,7 @@ public class Register {
 	
 	public static boolean register(String register_data) throws Exception {
 		register_data = register_data.trim();
-		spreadSheetID = SpreadSheetSnippets.get_spread_sheet_id();
+		spreadSheetID = SpreadSheetSnippets.get_user_account_database_spread_sheet_id();
         
 		boolean register_successful = false;		
 		if (!is_account_exist(register_data)) {
@@ -45,7 +45,7 @@ public class Register {
 
 		final String range = "User Account Database!A2:L";
         ValueRange response = SpreadSheetSnippets.getService().spreadsheets().values()
-                .get(SpreadSheetSnippets.get_spread_sheet_id(), range)
+                .get(SpreadSheetSnippets.get_user_account_database_spread_sheet_id(), range)
                 .execute();
         List<List<Object>> values = response.getValues();
         
@@ -62,7 +62,7 @@ public class Register {
 		
 		final String range = "User Account Database!A2:L";
         ValueRange response = SpreadSheetSnippets.getService().spreadsheets().values()
-                .get(SpreadSheetSnippets.get_spread_sheet_id(), range)
+                .get(SpreadSheetSnippets.get_user_account_database_spread_sheet_id(), range)
                 .execute();
         List<List<Object>> values = response.getValues();
         

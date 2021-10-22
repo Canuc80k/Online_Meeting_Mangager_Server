@@ -1,14 +1,17 @@
 package meeting;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import general_function.FileTool;
+import gsheet.SpreadSheetSnippets;
 
 public class Meeting {
-	private static final String CURRENT_AVAILABLE_MEETING_ID_FILE_PATH = "meeting/current_available_meeting_id";
-	private static final String MEETING_SPECIFIED_DATA_FOLDER_PATH = "meeting/meeting_specified_data/";
+	private static final String MEETING_FOLDER_PATH = "src/main/resources/meeting";
+	private static final String CURRENT_AVAILABLE_MEETING_ID_FILE_PATH = "src/main/resources/meeting/current_available_meeting_id";
+	private static final String MEETING_SPECIFIED_DATA_FOLDER_PATH = "src/main/resources/meeting/meeting_specified_data/";
 	private static final String JOINER_APP_ACTIVITY_SPLIT_SIGNAL = "\n~!~#@~\n";
 	
 	private String current_available_meeting_id;
@@ -17,6 +20,7 @@ public class Meeting {
 	private String changed_meeting_id, new_meeting_infomation;
 	
 	public void general_init() throws Exception {
+		if (!(new File(MEETING_FOLDER_PATH)).exists()) new File(MEETING_FOLDER_PATH).mkdirs();
 		if (!(new File(CURRENT_AVAILABLE_MEETING_ID_FILE_PATH)).exists()) FileTool.write_file("", CURRENT_AVAILABLE_MEETING_ID_FILE_PATH);
 		if (!(new File(MEETING_SPECIFIED_DATA_FOLDER_PATH)).exists()) new File(MEETING_SPECIFIED_DATA_FOLDER_PATH).mkdirs();
 	
@@ -139,28 +143,28 @@ public class Meeting {
 	    FileTool.write_file(joiner_id_data, meeting_joiner_id_file_path);
 	}
 	
-	public String create_meeting(String meeting_information) throws Exception {
+	public String create_meeting(String meeting_information) throws Exception {	
 		general_init();
-		create_meeting_init();
-		create_meeting_information_file(meeting_information, current_available_meeting_id);
-		update_current_available_id(current_available_meeting_id);
-		
-		return current_available_meeting_id ;
-	}
-	
-	private void create_meeting_init() throws Exception {
 		current_available_meeting_id = FileTool.read_file(CURRENT_AVAILABLE_MEETING_ID_FILE_PATH).trim();
 		if (current_available_meeting_id == null || current_available_meeting_id.equals("")) current_available_meeting_id = "0000000000";
-	}
-	
-	private void create_meeting_information_file(String meeting_information, String current_available_meeting_id) throws Exception {
-		new File(MEETING_SPECIFIED_DATA_FOLDER_PATH + current_available_meeting_id).mkdirs();
-		String specified_data_file_path = MEETING_SPECIFIED_DATA_FOLDER_PATH + current_available_meeting_id + "/meeting_information";
-		FileTool.write_file(meeting_information, specified_data_file_path);		
-	}
-	
-	private void update_current_available_id(String current_available_meeting_id) throws Exception {
 		String new_id = Meeting_ID.get_next_meeting_id(current_available_meeting_id);
 		FileTool.write_file(new_id, CURRENT_AVAILABLE_MEETING_ID_FILE_PATH);
+		
+		List<Object> append_row = new ArrayList<Object>();
+		List<String> meeting_information_list = Arrays.asList(meeting_information.split("\n"));
+		append_row.add(current_available_meeting_id);
+		append_row.add(current_available_meeting_id);
+		for (int i = 0; i < meeting_information_list.size(); i ++)
+			append_row.add(meeting_information_list.get(i));
+		List<List<Object>> values = new ArrayList<List<Object>>();
+		values.add(append_row);
+		
+		try {
+			if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
+			String spreadSheetID = SpreadSheetSnippets.get_meeting_information_database_spread_sheet_id();
+			SpreadSheetSnippets.appendValues(spreadSheetID, "Meeting Information Database", "RAW", values);
+		} catch (Exception e) {e.printStackTrace();}
+		
+		return current_available_meeting_id ;
 	}
 }

@@ -54,7 +54,7 @@ public class SpreadSheetSnippets {
 				.setApplicationName(APPLICATION_NAME).build();
 	}
 
-	public static String create(String title) throws IOException {
+	public static String createNewSpreadSheet(String title) throws IOException {
 		Sheets service = SpreadSheetSnippets.service;
 
 		Spreadsheet spreadsheet = new Spreadsheet().setProperties(new SpreadsheetProperties().setTitle(title));
@@ -62,32 +62,30 @@ public class SpreadSheetSnippets {
 		return spreadsheet.getSpreadsheetId();
 	}
 
-	public static String get_spread_sheet_id() throws Exception {
-		if (SpreadSheetSnippets.getService() == null)
-			SpreadSheetSnippets.createService();
+	public static String get_user_account_database_spread_sheet_id() throws Exception {
+		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
 
 		String spreadSheetID = null;
 
 		try {
-			spreadSheetID = FileTool.read_file(SPREAD_SHEET_ID_FOLDER_PATH + "user_account_database_spread_sheet_id")
-					.trim();
-		} catch (Exception e) {
-		}
-
-		if (spreadSheetID == null) {
-			try {
-				spreadSheetID = SpreadSheetSnippets.create("User Account Database");
-				FileTool.write_file(spreadSheetID,
-						SPREAD_SHEET_ID_FOLDER_PATH + "user_account_database_spread_sheet_id");
-			} catch (Exception e) {
-				spreadSheetID = FileTool
-						.read_file(SPREAD_SHEET_ID_FOLDER_PATH + "user_account_database_spread_sheet_id").trim();
-			}
-		}
+			spreadSheetID = FileTool.read_file(SPREAD_SHEET_ID_FOLDER_PATH + "user_account_database_spread_sheet_id").trim();
+		} catch (Exception e) {}
 
 		return spreadSheetID;
 	}
 
+	public static String get_meeting_information_database_spread_sheet_id() throws Exception {
+		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
+
+		String spreadSheetID = null;
+
+		try {
+			spreadSheetID = FileTool.read_file(SPREAD_SHEET_ID_FOLDER_PATH + "meeting_information_database_spread_sheet_id").trim();
+		} catch (Exception e) {}
+
+		return spreadSheetID;
+	}
+	
 	public static AppendValuesResponse appendValues(String spreadsheetId, String range, String valueInputOption,
 			List<List<Object>> _values) throws IOException {
 		Sheets service = SpreadSheetSnippets.service;
