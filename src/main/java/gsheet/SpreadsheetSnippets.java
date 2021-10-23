@@ -10,6 +10,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.drive.model.File;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.*;
@@ -52,14 +53,6 @@ public class SpreadSheetSnippets {
 
 		service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
 				.setApplicationName(APPLICATION_NAME).build();
-	}
-
-	public static String createNewSpreadSheet(String title) throws IOException {
-		Sheets service = SpreadSheetSnippets.service;
-
-		Spreadsheet spreadsheet = new Spreadsheet().setProperties(new SpreadsheetProperties().setTitle(title));
-		spreadsheet = service.spreadsheets().create(spreadsheet).setFields("spreadsheetId").execute();
-		return spreadsheet.getSpreadsheetId();
 	}
 
 	public static String get_user_account_database_spread_sheet_id() throws Exception {
@@ -106,6 +99,20 @@ public class SpreadSheetSnippets {
 		return result;
 	}
 
+	public static void rename_worksheet(String SpreadSheetID, String title) throws Exception {
+		List<Request> requests = new ArrayList<>();
+		requests.add(new Request().setUpdateSheetProperties(
+				new UpdateSheetPropertiesRequest()
+					.setProperties(
+							new SheetProperties()
+								.setTitle(title)
+					).setFields("title")
+		));
+		
+		BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest().setRequests(requests);
+		SpreadSheetSnippets.getService().spreadsheets().batchUpdate(SpreadSheetID, body).execute();
+	}
+	
 	public BatchUpdateSpreadsheetResponse batchUpdate(String spreadsheetId, String title, String find,
 			String replacement) throws IOException {
 		Sheets service = this.service;

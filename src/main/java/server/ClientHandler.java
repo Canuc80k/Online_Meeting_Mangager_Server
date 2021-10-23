@@ -43,8 +43,8 @@ public class ClientHandler extends Thread {
 	 */
 	public static void handle_client_input(String data_received) throws Exception {
 		List<String> client_request_data_list = get_client_request_data(data_received);
-		String client_request_action = client_request_data_list.get(0);
-		String client_request_specified_data = client_request_data_list.get(1);
+		String client_request_action = client_request_data_list.get(0).trim();
+		String client_request_specified_data = client_request_data_list.get(1).trim();
 		
 		if (client_request_action.equals("LOGIN")) {
 			toreturn = Login.login(client_request_specified_data);

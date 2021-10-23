@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import general_function.FileTool;
+import gsheet.GoogleDriveSnippets;
 import gsheet.SpreadSheetSnippets;
 
 public class Meeting {
@@ -145,13 +146,23 @@ public class Meeting {
 	
 	public String create_meeting(String meeting_information) throws Exception {	
 		general_init();
+		create_meeting_init();
+		add_to_meeting_information_database(meeting_information);
+		create_user_activity_in_meeting_database(meeting_information);
+
+		return current_available_meeting_id ;
+	}
+	
+	public void create_meeting_init() throws Exception {
 		current_available_meeting_id = FileTool.read_file(CURRENT_AVAILABLE_MEETING_ID_FILE_PATH).trim();
 		if (current_available_meeting_id == null || current_available_meeting_id.equals("")) current_available_meeting_id = "0000000000";
 		String new_id = Meeting_ID.get_next_meeting_id(current_available_meeting_id);
 		FileTool.write_file(new_id, CURRENT_AVAILABLE_MEETING_ID_FILE_PATH);
-		
+	}
+	
+	public void add_to_meeting_information_database(String new_meeting_information) {
 		List<Object> append_row = new ArrayList<Object>();
-		List<String> meeting_information_list = Arrays.asList(meeting_information.split("\n"));
+		List<String> meeting_information_list = Arrays.asList(new_meeting_information.split("\n"));
 		append_row.add(current_available_meeting_id);
 		append_row.add(current_available_meeting_id);
 		for (int i = 0; i < meeting_information_list.size(); i ++)
@@ -164,7 +175,26 @@ public class Meeting {
 			String spreadSheetID = SpreadSheetSnippets.get_meeting_information_database_spread_sheet_id();
 			SpreadSheetSnippets.appendValues(spreadSheetID, "Meeting Information Database", "RAW", values);
 		} catch (Exception e) {e.printStackTrace();}
+	}
+
+	public void create_user_activity_in_meeting_database(String meeting_information) throws Exception {
+		if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
+		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
+			
+		String parent_folder_id;
+		try {parent_folder_id = GoogleDriveSnippets.getGoogleSubFolderByName(null, "User Activity In Meeting").get(0).getId();} 
+		catch (Exception e) {parent_folder_id = GoogleDriveSnippets.createGoogleFolder(null, "User Activity In Meeting").getId();}
 		
-		return current_available_meeting_id ;
+		try {	
+			String spreadSheetID = GoogleDriveSnippets.createNewSpreadSheet(current_available_meeting_id);
+			GoogleDriveSnippets.moveFileToFolder(spreadSheetID, parent_folder_id);
+			SpreadSheetSnippets.rename_worksheet(spreadSheetID, "Running_Temp_1");
+			
+			List<List<Object>> values = new ArrayList<List<Object>>();
+			List<Object> first_row = new ArrayList<Object>();
+			first_row.add("ID"); first_row.add("Số Lần Chuyển Tab"); first_row.add("Số Lần Chuyển App"); first_row.add("Dữ Liệu Thô");
+			values.add(first_row);
+			SpreadSheetSnippets.appendValues(spreadSheetID, "Running_Temp_1", "RAW", values);
+		} catch (Exception e) {e.printStackTrace();}
 	}
 }
