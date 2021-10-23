@@ -10,7 +10,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.services.drive.model.File;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.*;
@@ -32,11 +31,11 @@ public class SpreadSheetSnippets {
 	private static final String TOKENS_DIRECTORY_PATH = "tokens";
 	private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.DRIVE);
 	private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
-	private static final String SPREAD_SHEET_ID_FOLDER_PATH = "src/main/resources/spread_sheet_id/";
+	private static final String DRIVE_ID_FOLDER_PATH = "src/main/resources/drive_id/";
 
 	private static Sheets service;
 
-	public static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
+	public static synchronized Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
 		InputStream in = SpreadSheetSnippets.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
 		GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
@@ -48,38 +47,32 @@ public class SpreadSheetSnippets {
 		return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
 	}
 
-	public static void createService() throws Exception {
+	public static synchronized void createService() throws Exception {
 		final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
 
 		service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
 				.setApplicationName(APPLICATION_NAME).build();
 	}
 
-	public static String get_user_account_database_spread_sheet_id() throws Exception {
-		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
-
+	public static synchronized String get_user_account_database_spread_sheet_id() throws Exception {
 		String spreadSheetID = null;
-
-		try {
-			spreadSheetID = FileTool.read_file(SPREAD_SHEET_ID_FOLDER_PATH + "user_account_database_spread_sheet_id").trim();
-		} catch (Exception e) {}
-
+		spreadSheetID = FileTool.read_file(DRIVE_ID_FOLDER_PATH + "user_account_database_spread_sheet_id").trim();
 		return spreadSheetID;
 	}
 
-	public static String get_meeting_information_database_spread_sheet_id() throws Exception {
-		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
-
+	public static synchronized String get_meeting_information_database_spread_sheet_id() throws Exception {
 		String spreadSheetID = null;
-
-		try {
-			spreadSheetID = FileTool.read_file(SPREAD_SHEET_ID_FOLDER_PATH + "meeting_information_database_spread_sheet_id").trim();
-		} catch (Exception e) {}
-
+		spreadSheetID = FileTool.read_file(DRIVE_ID_FOLDER_PATH + "meeting_information_database_spread_sheet_id").trim();
 		return spreadSheetID;
 	}
 	
-	public static AppendValuesResponse appendValues(String spreadsheetId, String range, String valueInputOption,
+	public static synchronized String get_user_activity_in_meeting_database_folder_id() throws Exception {
+		String folderID = null;
+		folderID = FileTool.read_file(DRIVE_ID_FOLDER_PATH + "user_acitivity_in_meeting_folder_id").trim();
+		return folderID;
+	}
+	
+	public static synchronized AppendValuesResponse appendValues(String spreadsheetId, String range, String valueInputOption,
 			List<List<Object>> _values) throws IOException {
 		Sheets service = SpreadSheetSnippets.service;
 		// [START sheets_append_values]
@@ -115,7 +108,7 @@ public class SpreadSheetSnippets {
 	
 	public BatchUpdateSpreadsheetResponse batchUpdate(String spreadsheetId, String title, String find,
 			String replacement) throws IOException {
-		Sheets service = this.service;
+		Sheets service = SpreadSheetSnippets.service;
 		// [START sheets_batch_update]
 		List<Request> requests = new ArrayList<>();
 		// Change the spreadsheet's title.
@@ -135,7 +128,7 @@ public class SpreadSheetSnippets {
 	}
 
 	public ValueRange getValues(String spreadsheetId, String range) throws IOException {
-		Sheets service = this.service;
+		Sheets service = SpreadSheetSnippets.service;
 		// [START sheets_get_values]
 		ValueRange result = service.spreadsheets().values().get(spreadsheetId, range).execute();
 		int numRows = result.getValues() != null ? result.getValues().size() : 0;
@@ -145,7 +138,7 @@ public class SpreadSheetSnippets {
 	}
 
 	public BatchGetValuesResponse batchGetValues(String spreadsheetId, List<String> _ranges) throws IOException {
-		Sheets service = this.service;
+		Sheets service = SpreadSheetSnippets.service;
 		// [START sheets_batch_get_values]
 		List<String> ranges = Arrays.asList(
 		// Range names ...
@@ -162,7 +155,7 @@ public class SpreadSheetSnippets {
 
 	public UpdateValuesResponse updateValues(String spreadsheetId, String range, String valueInputOption,
 			List<List<Object>> _values) throws IOException {
-		Sheets service = this.service;
+		Sheets service = SpreadSheetSnippets.service;
 		// [START sheets_update_values]
 		List<List<Object>> values = Arrays.asList(Arrays.asList(
 		// Cell values ...
@@ -205,7 +198,7 @@ public class SpreadSheetSnippets {
 	}
 
 	public BatchUpdateSpreadsheetResponse pivotTables(String spreadsheetId) throws IOException {
-		Sheets service = this.service;
+		Sheets service = SpreadSheetSnippets.service;
 
 		// Create two sheets for our pivot table.
 		List<Request> sheetsRequests = new ArrayList<>();
@@ -278,7 +271,7 @@ public class SpreadSheetSnippets {
 		return result;
 	}
 
-	public static Sheets getService() throws Exception {
+	public static synchronized Sheets getService() throws Exception {
 		if (service == null) createService();
 		return service;
 	}

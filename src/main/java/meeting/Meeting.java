@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
+import com.google.api.services.sheets.v4.model.Sheet;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
+
 import general_function.FileTool;
 import gsheet.GoogleDriveSnippets;
 import gsheet.SpreadSheetSnippets;
@@ -100,51 +105,42 @@ public class Meeting {
 			app_activity_received += meeting_data_recieved_list.get(i) + '\n';
 	}
 	
-	public String join_meeting(String joiner_meeting_information) throws Exception {
+	public synchronized String join_meeting(String joiner_meeting_information) throws Exception {
 		general_init();
 		join_meeting_init(joiner_meeting_information);
-		String meeting_data = null;
 		
+		String meeting_data = null;
 		try {
-			File[] files = new File(MEETING_SPECIFIED_DATA_FOLDER_PATH).listFiles();
-			for (File file : files) {
-				if (file.getName().trim().equals(meeting_id_need_to_join.trim())) {
-					meeting_data = FileTool.read_file(MEETING_SPECIFIED_DATA_FOLDER_PATH
-							+ meeting_id_need_to_join.trim() + "/meeting_information");
-					add_joiner_id_to_meeting(meeting_id_need_to_join, joiner_id);
-					break;
-				}
-			}
-		} catch (Exception e) {}
-
+			if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
+			if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
+			
+			List<com.google.api.services.drive.model.File> all_user_activity_in_meeting_database = GoogleDriveSnippets.getGoogleFilesByName(
+					meeting_id_need_to_join
+			);
+			
+			String spreadSheetID = all_user_activity_in_meeting_database.get(0).getId();
+			
+			Spreadsheet spreadSheets = SpreadSheetSnippets.getService().spreadsheets().get(spreadSheetID).execute();
+			List<Sheet> sheets = spreadSheets.getSheets();
+			String current_sheet_tab = sheets.get(sheets.size() - 1).getProperties().getTitle();
+			List<List<Object>> values = new ArrayList<List<Object>>();
+			List<Object> new_row = new ArrayList<Object>();
+			new_row.add(joiner_id);
+			values.add(new_row);
+			SpreadSheetSnippets.appendValues(spreadSheetID, current_sheet_tab, "RAW", values);
+			meeting_data = "JOIN_MEETING_SUCCESS";
+		} catch(Exception e) {}
 		if (meeting_data == null) meeting_data = "FAIL_TO_JOIN_MEETING";
 		return meeting_data;
 	}
 	
-	public void join_meeting_init(String joiner_meeting_information) {
+	private synchronized void join_meeting_init(String joiner_meeting_information) {
 		List<String> joiner_meeting_information_list = Arrays.asList(joiner_meeting_information.split("\n"));
 		meeting_id_need_to_join = joiner_meeting_information_list.get(0).trim();
 		joiner_id = joiner_meeting_information_list.get(1).trim();
 	}
 	
-	public synchronized void add_joiner_id_to_meeting(String meeting_id, String joiner_id) throws Exception {
-		String joiner_id_data = "";
-		String meeting_joiner_id_file_path = MEETING_SPECIFIED_DATA_FOLDER_PATH + meeting_id + "/joiner_id";
-	    File meeting_joiner_id_file = new File(meeting_joiner_id_file_path);
-		if (meeting_joiner_id_file.exists()) {
-			joiner_id_data = FileTool.read_file(meeting_joiner_id_file_path).trim();
-			joiner_id_data += '\n' + joiner_id;
-		} else {
-			FileTool.write_file("", meeting_joiner_id_file_path);
-			
-			joiner_id_data = "";
-			joiner_id_data += joiner_id;
-		}
-	    
-	    FileTool.write_file(joiner_id_data, meeting_joiner_id_file_path);
-	}
-	
-	public String create_meeting(String meeting_information) throws Exception {	
+	public synchronized String create_meeting(String meeting_information) throws Exception {	
 		general_init();
 		create_meeting_init();
 		add_to_meeting_information_database(meeting_information);
@@ -153,14 +149,14 @@ public class Meeting {
 		return current_available_meeting_id ;
 	}
 	
-	public void create_meeting_init() throws Exception {
+	private synchronized void create_meeting_init() throws Exception {
 		current_available_meeting_id = FileTool.read_file(CURRENT_AVAILABLE_MEETING_ID_FILE_PATH).trim();
 		if (current_available_meeting_id == null || current_available_meeting_id.equals("")) current_available_meeting_id = "0000000000";
 		String new_id = Meeting_ID.get_next_meeting_id(current_available_meeting_id);
 		FileTool.write_file(new_id, CURRENT_AVAILABLE_MEETING_ID_FILE_PATH);
 	}
 	
-	public void add_to_meeting_information_database(String new_meeting_information) {
+	private synchronized void add_to_meeting_information_database(String new_meeting_information) {
 		List<Object> append_row = new ArrayList<Object>();
 		List<String> meeting_information_list = Arrays.asList(new_meeting_information.split("\n"));
 		append_row.add(current_available_meeting_id);
@@ -177,7 +173,7 @@ public class Meeting {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 
-	public void create_user_activity_in_meeting_database(String meeting_information) throws Exception {
+	private synchronized void create_user_activity_in_meeting_database(String meeting_information) throws Exception {
 		if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
 		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
 			
