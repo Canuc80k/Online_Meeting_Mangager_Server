@@ -127,7 +127,7 @@ public class SpreadSheetSnippets {
 		return response;
 	}
 
-	public ValueRange getValues(String spreadsheetId, String range) throws IOException {
+	public static ValueRange getValues(String spreadsheetId, String range) throws IOException {
 		Sheets service = SpreadSheetSnippets.service;
 		// [START sheets_get_values]
 		ValueRange result = service.spreadsheets().values().get(spreadsheetId, range).execute();
@@ -173,7 +173,7 @@ public class SpreadSheetSnippets {
 		return result;
 	}
 
-	public BatchUpdateValuesResponse batchUpdateValues(String spreadsheetId, String range, String valueInputOption,
+	public static BatchUpdateValuesResponse batchUpdateValues(String spreadsheetId, String range, String valueInputOption,
 			List<List<Object>> _values) throws IOException {
 		Sheets service = SpreadSheetSnippets.service;
 		// [START sheets_batch_update_values]
