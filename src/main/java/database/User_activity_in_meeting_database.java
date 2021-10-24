@@ -11,7 +11,24 @@ import gsheet.SpreadSheetSnippets;
 
 public class User_activity_in_meeting_database {
 	public enum USER_ACTIVITY_IN_MEETING_DATABASE {
+		INDEX(0),
+		TAB_CHANGE(1),
+		APP_CHANGE(2),
+		RAW_DATA(3);
+
+		private int index;
 		
+		USER_ACTIVITY_IN_MEETING_DATABASE(int new_index) {
+			this.index = new_index;
+		}
+
+		public int get_index() {
+			return index;
+		}
+		
+		public static String get_last_column() {
+			return "D";
+		}
 	}
 	
 	public static synchronized void create_database(String meeting_information, String meeting_id) throws Exception {
@@ -58,5 +75,40 @@ public class User_activity_in_meeting_database {
 			add_successfully = true;
 		} catch(Exception e) {}
 		return add_successfully;
+	}
+
+	public static synchronized boolean add_raw_data(String spreadSheetID, String joiner_id, String raw_data) {
+		boolean add_successfully = false;
+		
+		try {
+			List<Sheet> sheets = SpreadSheetSnippets.getService().spreadsheets().get(spreadSheetID).setIncludeGridData(false).execute().getSheets();
+			String sheetName = sheets.get(sheets.size() - 1).getProperties().getTitle();
+			List<List<Object>> values = SpreadSheetSnippets.getValues(spreadSheetID, sheetName).getValues();
+			String row = String.valueOf(get_joiner_row_by_account_index(joiner_id, values));
+			String range = sheetName + "!" + "A" + row + ":" + USER_ACTIVITY_IN_MEETING_DATABASE.get_last_column() + row;
+			List<List<Object>> new_values = new ArrayList<List<Object>>();
+			List<Object> update_row = new ArrayList<Object>();
+			update_row.add(joiner_id);
+			update_row.add("0");
+			update_row.add("0");
+			update_row.add(raw_data);
+			new_values.add(update_row);
+			SpreadSheetSnippets.batchUpdateValues(spreadSheetID, range, "RAW", new_values);
+			add_successfully = true;
+		} catch(Exception e) {}
+		
+		return add_successfully;
+	}
+	
+	public static synchronized int get_joiner_row_by_account_index(String joiner_id, List<List<Object>> values) {
+		int joiner_row = -1;
+		
+		for (int i = 0; i < values.size(); i ++) 
+			if (values.get(i).get(USER_ACTIVITY_IN_MEETING_DATABASE.INDEX.get_index()).toString().trim().equals(joiner_id)) {
+				joiner_row = i + 1;
+				break;
+			}
+		
+		return joiner_row;
 	}
 }

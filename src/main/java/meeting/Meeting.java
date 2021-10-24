@@ -8,6 +8,7 @@ import database.Meeting_information_database;
 import database.User_account_database;
 import database.User_activity_in_meeting_database;
 import general_function.FileTool;
+import gsheet.GoogleDriveSnippets;
 
 public class Meeting {
 	private static final String MEETING_FOLDER_PATH = "src/main/resources/meeting";
@@ -80,19 +81,18 @@ public class Meeting {
 		return meeting_data;
 	}
 	
-	public String receive_meeting_data(String meeting_data_recieved) throws Exception {
+	public synchronized String receive_meeting_data(String meeting_data_recieved) throws Exception {
 		general_init();
-		String receive_meeting_data_successfully = "true";
 		receive_meeting_data_init(meeting_data_recieved);
+		String spreadSheetID = GoogleDriveSnippets.getGoogleFilesByName(meeting_id_of_data_recieved).get(0).getId().trim();
 		
-		File all_joiner_app_activity_folder = new File(MEETING_SPECIFIED_DATA_FOLDER_PATH + meeting_id_of_data_recieved + "/joiner_app_activity/");
-		if (!all_joiner_app_activity_folder.exists()) all_joiner_app_activity_folder.mkdirs();
-		
-		FileTool.write_file(app_activity_received, all_joiner_app_activity_folder.getPath() + '/' + user_id_of_data_recieved);
-		return receive_meeting_data_successfully;
+		String receive_successfully = "SERVER_RECEIVE_JOINER_APP_ACTIVITY_SUCCESSFULLY";
+		if (!User_activity_in_meeting_database.add_raw_data(spreadSheetID, user_id_of_data_recieved, app_activity_received)) 
+			receive_successfully = "FAIL_TO_RECEIVE_JOINER_APP_ACTIVITY";
+		return receive_successfully;
 	}
 	
-	public void receive_meeting_data_init(String meeting_data_recieved) {
+	public synchronized void receive_meeting_data_init(String meeting_data_recieved) {
 		List<String> meeting_data_recieved_list = Arrays.asList(meeting_data_recieved.split("\n"));
 		user_id_of_data_recieved = meeting_data_recieved_list.get(0);
 		meeting_id_of_data_recieved = meeting_data_recieved_list.get(1);
