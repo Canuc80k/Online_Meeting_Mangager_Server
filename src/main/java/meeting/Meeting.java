@@ -103,13 +103,17 @@ public class Meeting {
 	public synchronized String join_meeting(String joiner_meeting_information) throws Exception {
 		general_init();
 		join_meeting_init(joiner_meeting_information);
-		String join_successfully = "JOIN_MEETING_SUCCESS";
+		String meeting_information = "";
 		if (!User_activity_in_meeting_database.add_new_joiner_to_database(meeting_id_need_to_join, joiner_id)) 
-			join_successfully = "FAIL_TO_JOIN_MEETING";
-		if (!User_account_database.add_to_user_account_database(meeting_id_need_to_join, joiner_id))
-			join_successfully = "FAIL_TO_JOIN_MEETING";
+			meeting_information = "FAIL_TO_JOIN_MEETING";
+		if (!User_account_database.add_new_joined_meeting(meeting_id_need_to_join, joiner_id))
+			meeting_information = "FAIL_TO_JOIN_MEETING";
 		
-		return join_successfully;
+		try {
+			meeting_information = Meeting_information_database.get_meeting_info(meeting_id_need_to_join); 
+		} catch(Exception e) {}
+		
+		return meeting_information;
 	}
 	
 	private synchronized void join_meeting_init(String joiner_meeting_information) {
@@ -121,7 +125,7 @@ public class Meeting {
 	public synchronized String create_meeting(String meeting_information) throws Exception {	
 		general_init();
 		create_meeting_init();
-		Meeting_information_database.add_new_meeting_to_database(meeting_information, current_available_meeting_id);
+		Meeting_information_database.add_new_meeting(meeting_information, current_available_meeting_id);
 		User_activity_in_meeting_database.create_database(meeting_information, current_available_meeting_id);
 
 		return current_available_meeting_id ;

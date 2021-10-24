@@ -10,6 +10,10 @@ import java.util.List;
 import account.Account;
 import account.Login;
 import account.Register;
+import database.Meeting_information_database;
+import database.User_account_database;
+import gsheet.GoogleDriveSnippets;
+import gsheet.SpreadSheetSnippets;
 import meeting.Meeting;
 
 public class ClientHandler extends Thread {
@@ -29,6 +33,9 @@ public class ClientHandler extends Thread {
 	public void run() {
 		while (true) {
 			try {
+				if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
+				if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
+				
 				received = dis.readUTF();
 				handle_client_input(received);
 				dos.writeUTF(toreturn);
@@ -89,6 +96,16 @@ public class ClientHandler extends Thread {
 		
 		if (client_request_action.equals("GET_ACCOUNT_INFO")) {
 			toreturn = Account.get_account_information(client_request_specified_data);
+			return;
+		}
+		
+		if (client_request_action.equals("GET_JOINED_MEETINGS")) {
+			toreturn = User_account_database.get_joined_meetings(client_request_specified_data);
+			return;
+		}
+		
+		if (client_request_action.equals("GET_MEETING_INFO")) {
+			toreturn = Meeting_information_database.get_meeting_info(client_request_specified_data);
 			return;
 		}
 	}

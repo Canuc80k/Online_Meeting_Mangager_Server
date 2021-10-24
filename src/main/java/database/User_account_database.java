@@ -31,7 +31,7 @@ public class User_account_database {
 		}
 	}
 	
-	public static synchronized boolean add_to_user_account_database(String meeting_id_need_to_join, String joiner_id) {
+	public static synchronized boolean add_new_joined_meeting(String meeting_id_need_to_join, String joiner_id) {
 		boolean add_successfully = false;
 		
 		try {
@@ -64,5 +64,40 @@ public class User_account_database {
 		} catch(Exception e) {}
 		
 		return add_successfully;
+	}
+
+	public static synchronized String get_joined_meetings(String account_id) {
+		String joined_meetings = "";
+		
+		try {
+			String spreadSheetID = SpreadSheetSnippets.get_user_account_database_spread_sheet_id();
+			List<List<Object>> values = SpreadSheetSnippets.getValues(spreadSheetID, "USER ACCOUNT DATABASE").getValues();
+			int joiner_row_index = get_joiner_row_by_account_index(account_id, values);
+			
+			char cell_column = (char)('A' + USER_ACCOUNT_DATABASE.JOINED_MEETING.get_index());
+			String cell_row = String.valueOf(joiner_row_index);
+			String cell_location = cell_column + cell_row;
+			String range = "USER ACCOUNT DATABASE!" + cell_location + ":" + cell_location;
+			List<List<Object>> joined_meetings_values = SpreadSheetSnippets.getValues(spreadSheetID, range).getValues();
+			
+			for (int i = 0; i < joined_meetings_values.get(0).size(); i ++) 
+				joined_meetings += joined_meetings_values.get(0).get(i).toString().trim() + '\n';
+				
+		} catch(Exception e) {};
+		
+		if (joined_meetings.equals("")) joined_meetings = "FAIL_TO_GET_JOINED_MEETINGS";
+		return joined_meetings;
+	}
+	
+	public static synchronized int get_joiner_row_by_account_index(String joiner_id, List<List<Object>> values) {
+		int joiner_row = -1;
+		
+		for (int i = 0; i < values.size(); i ++) 
+			if (values.get(i).get(USER_ACCOUNT_DATABASE.INDEX.get_index()).toString().trim().equals(joiner_id)) {
+				joiner_row = i + 1;
+				break;
+			}
+		
+		return joiner_row;
 	}
 }
