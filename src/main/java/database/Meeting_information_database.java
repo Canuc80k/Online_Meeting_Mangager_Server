@@ -39,6 +39,7 @@ public class Meeting_information_database {
 	}
 	
 	public static synchronized void add_new_meeting(String new_meeting_information, String meeting_id) {
+		System.out.println(new_meeting_information);
 		List<Object> append_row = new ArrayList<Object>();
 		List<String> meeting_information_list = Arrays.asList(new_meeting_information.split("\n"));
 		append_row.add(meeting_id);
@@ -48,6 +49,7 @@ public class Meeting_information_database {
 		List<List<Object>> values = new ArrayList<List<Object>>();
 		values.add(append_row);
 		
+		System.out.println(values);
 		try {
 			if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
 			String spreadSheetID = SpreadSheetSnippets.get_meeting_information_database_spread_sheet_id();

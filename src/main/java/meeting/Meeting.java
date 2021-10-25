@@ -16,7 +16,7 @@ public class Meeting {
 	private static final String MEETING_SPECIFIED_DATA_FOLDER_PATH = "src/main/resources/meeting/meeting_specified_data/";
 	private static final String JOINER_APP_ACTIVITY_SPLIT_SIGNAL = "\n~!~#@~\n";
 	
-	private String current_available_meeting_id;
+	private String current_available_meeting_id, meeting_creator_id, created_meeting_information;
 	private String meeting_id_need_to_join, joiner_id;
 	private String user_id_of_data_recieved, meeting_id_of_data_recieved, app_activity_received;
 	private String changed_meeting_id, new_meeting_infomation;
@@ -26,9 +26,10 @@ public class Meeting {
 		if (!(new File(CURRENT_AVAILABLE_MEETING_ID_FILE_PATH)).exists()) FileTool.write_file("", CURRENT_AVAILABLE_MEETING_ID_FILE_PATH);
 		if (!(new File(MEETING_SPECIFIED_DATA_FOLDER_PATH)).exists()) new File(MEETING_SPECIFIED_DATA_FOLDER_PATH).mkdirs();
 	
-		this.current_available_meeting_id = "";
+		this.current_available_meeting_id = this.meeting_creator_id = this.created_meeting_information = "";
 		this.meeting_id_need_to_join = this.joiner_id = "";
 		this.user_id_of_data_recieved = this.meeting_id_of_data_recieved = this.app_activity_received = "";
+		this.changed_meeting_id = this.new_meeting_infomation = "";
 		this.changed_meeting_id = this.new_meeting_infomation = "";
 	}
 	
@@ -94,10 +95,10 @@ public class Meeting {
 	
 	public synchronized void receive_meeting_data_init(String meeting_data_recieved) {
 		List<String> meeting_data_recieved_list = Arrays.asList(meeting_data_recieved.split("\n"));
-		user_id_of_data_recieved = meeting_data_recieved_list.get(0);
-		meeting_id_of_data_recieved = meeting_data_recieved_list.get(1);
+		user_id_of_data_recieved = meeting_data_recieved_list.get(0).trim();
+		meeting_id_of_data_recieved = meeting_data_recieved_list.get(1).trim();
 		for (int i = 2; i < meeting_data_recieved_list.size(); i ++)
-			app_activity_received += meeting_data_recieved_list.get(i) + '\n';
+			app_activity_received += meeting_data_recieved_list.get(i).trim() + '\n';
 	}
 	
 	public synchronized String join_meeting(String joiner_meeting_information) throws Exception {
@@ -122,16 +123,23 @@ public class Meeting {
 		joiner_id = joiner_meeting_information_list.get(1).trim();
 	}
 	
-	public synchronized String create_meeting(String meeting_information) throws Exception {	
+	public synchronized String create_meeting(String created_meeting_data) throws Exception {	
 		general_init();
-		create_meeting_init();
-		Meeting_information_database.add_new_meeting(meeting_information, current_available_meeting_id);
-		User_activity_in_meeting_database.create_database(meeting_information, current_available_meeting_id);
-
+		create_meeting_init(created_meeting_data);
+		Meeting_information_database.add_new_meeting(created_meeting_information, current_available_meeting_id);
+		User_activity_in_meeting_database.create_database(current_available_meeting_id);
+		User_account_database.add_new_created_meeting(current_available_meeting_id, meeting_creator_id);
+		
 		return current_available_meeting_id ;
 	}
 	
-	private synchronized void create_meeting_init() throws Exception {
+	private synchronized void create_meeting_init(String created_meeting_data) throws Exception {
+		List<String> created_meeting_data_list = Arrays.asList(created_meeting_data.split("\n"));
+		meeting_creator_id = created_meeting_data_list.get(0).trim();
+		created_meeting_information = created_meeting_data_list.get(1).trim();
+		for (int i = 2; i < created_meeting_data_list.size(); i ++) 
+			created_meeting_information += created_meeting_data_list.get(i).trim() + '\n';
+		
 		current_available_meeting_id = FileTool.read_file(CURRENT_AVAILABLE_MEETING_ID_FILE_PATH).trim();
 		if (current_available_meeting_id == null || current_available_meeting_id.equals("")) current_available_meeting_id = "0000000000";
 		String new_id = Meeting_ID.get_next_meeting_id(current_available_meeting_id);

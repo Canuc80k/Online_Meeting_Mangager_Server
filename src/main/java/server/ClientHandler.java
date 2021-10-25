@@ -108,6 +108,11 @@ public class ClientHandler extends Thread {
 			toreturn = Meeting_information_database.get_meeting_info(client_request_specified_data);
 			return;
 		}
+		
+		if (client_request_action.equals("GET_CREATED_MEETINGS")) {
+			toreturn = User_account_database.get_created_meetings(client_request_specified_data);
+			return;
+		}
 	}
 	
 	public static List<String> get_client_request_data(String data_received) {

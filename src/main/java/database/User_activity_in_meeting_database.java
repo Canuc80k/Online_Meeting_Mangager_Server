@@ -31,7 +31,7 @@ public class User_activity_in_meeting_database {
 		}
 	}
 	
-	public static synchronized void create_database(String meeting_information, String meeting_id) throws Exception {
+	public static synchronized void create_database(String meeting_id) throws Exception {
 		if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
 		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
 			
