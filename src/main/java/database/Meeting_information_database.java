@@ -20,8 +20,9 @@ public class Meeting_information_database {
 		T6(8),
 		T7(9),
 		CN(10),
-		STATE(11),
-		HOST(12);
+		START_DATE(11),
+		STATE(12),
+		HOST(13);
 		
 		private int index;
 		
@@ -34,12 +35,11 @@ public class Meeting_information_database {
 		}
 		
 		public static String get_last_column() {
-			return "M";
+			return "N";
 		}
 	}
 	
 	public static synchronized void add_new_meeting(String new_meeting_information, String meeting_id) {
-		System.out.println(new_meeting_information);
 		List<Object> append_row = new ArrayList<Object>();
 		List<String> meeting_information_list = Arrays.asList(new_meeting_information.split("\n"));
 		append_row.add(meeting_id);
@@ -49,7 +49,6 @@ public class Meeting_information_database {
 		List<List<Object>> values = new ArrayList<List<Object>>();
 		values.add(append_row);
 		
-		System.out.println(values);
 		try {
 			if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
 			String spreadSheetID = SpreadSheetSnippets.get_meeting_information_database_spread_sheet_id();
@@ -57,7 +56,7 @@ public class Meeting_information_database {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 
-	public static String get_meeting_info(String meeting_id) throws Exception {
+	public static synchronized String get_meeting_info(String meeting_id) throws Exception {
 		String meeting_info = "";
 		
 		try {
@@ -76,6 +75,31 @@ public class Meeting_information_database {
 		
 		if (meeting_info.equals("")) meeting_info = "FAIL_TO_GET_MEETING_INFO";
 		return meeting_info;
+	}
+	
+	public static synchronized String set_meeting_state(String meeting_id, String new_state) {
+		String set_successfully = "FAIL_TO_STOP_MEETING";
+		if (new_state.equals("ON")) set_successfully = "FAIL_TO_START_MEETING";
+			
+		try {
+			String spreadSheetID = SpreadSheetSnippets.get_meeting_information_database_spread_sheet_id();	
+			List<List<Object>> values = SpreadSheetSnippets.getValues(spreadSheetID, "Meeting Information Database").getValues();
+			int meeting_row_index = get_meeting_row_by_index(meeting_id, values);
+			
+			List<List<Object>> new_values = new ArrayList<List<Object>>();
+			List<Object> cell = new ArrayList<Object>();
+			cell.add(new_state);
+			new_values.add(cell);
+			char cell_column = (char)('A' + MEETING_INFORMATION_DATABASE.STATE.get_index());
+			String cell_row = String.valueOf(meeting_row_index);
+			String cell_location = cell_column + cell_row;
+			String range = "Meeting Information Database!" + cell_location + ":" + cell_location;
+			SpreadSheetSnippets.batchUpdateValues(spreadSheetID, range, "RAW", new_values);
+			set_successfully = "STOP MEETING SUCCESSFULLY";
+			if (new_state.equals("ON")) set_successfully = "START MEETING SUCCESSFULLY";
+		} catch (Exception e) {}
+		
+		return set_successfully;
 	}
 	
 	public static synchronized int get_meeting_row_by_index(String meeting_id, List<List<Object>> values) {

@@ -79,16 +79,6 @@ public class ClientHandler extends Thread {
 			return;
 		}
 		
-		if (client_request_action.equals("GET_MEETING_DATA")) {
-			toreturn = new Meeting().send_meeting_data(client_request_specified_data);
-			return;
-		}
-		
-		if (client_request_action.equals("CHANGE_MEETING_INFO")) {
-			toreturn = new Meeting().change_meeting_infomation(client_request_specified_data);
-			return;
-		}
-		
 		if (client_request_action.equals("CHANGE_ACCOUNT_INFO")) {
 			toreturn = Account.set_account_information(client_request_specified_data);
 			return;
@@ -111,6 +101,21 @@ public class ClientHandler extends Thread {
 		
 		if (client_request_action.equals("GET_CREATED_MEETINGS")) {
 			toreturn = User_account_database.get_created_meetings(client_request_specified_data);
+			return;
+		}
+		
+		if (client_request_action.equals("STOP_MEETING")) {
+			toreturn = Meeting_information_database.set_meeting_state(client_request_specified_data, "OFF");
+			return;
+		}
+	
+		if (client_request_action.equals("START_MEETING")) {
+			toreturn = Meeting_information_database.set_meeting_state(client_request_specified_data, "ON");
+			return;
+		}
+		
+		if (client_request_action.equals("OUT_MEETING")) {
+			toreturn = new Meeting().out_meeting(client_request_specified_data);
 			return;
 		}
 	}

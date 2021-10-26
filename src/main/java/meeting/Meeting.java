@@ -19,7 +19,7 @@ public class Meeting {
 	private String current_available_meeting_id, meeting_creator_id, created_meeting_information;
 	private String meeting_id_need_to_join, joiner_id;
 	private String user_id_of_data_recieved, meeting_id_of_data_recieved, app_activity_received;
-	private String changed_meeting_id, new_meeting_infomation;
+	private String meeting_id_need_to_out, account_id_need_to_out_meeting;
 	
 	public void general_init() throws Exception {
 		if (!(new File(MEETING_FOLDER_PATH)).exists()) new File(MEETING_FOLDER_PATH).mkdirs();
@@ -29,59 +29,25 @@ public class Meeting {
 		this.current_available_meeting_id = this.meeting_creator_id = this.created_meeting_information = "";
 		this.meeting_id_need_to_join = this.joiner_id = "";
 		this.user_id_of_data_recieved = this.meeting_id_of_data_recieved = this.app_activity_received = "";
-		this.changed_meeting_id = this.new_meeting_infomation = "";
-		this.changed_meeting_id = this.new_meeting_infomation = "";
+		this.meeting_id_need_to_out = this.account_id_need_to_out_meeting = "";
 	}
 	
-	public String change_meeting_infomation(String meeting_data) throws Exception {
+	public synchronized String out_meeting(String user_data) throws Exception {
 		general_init();
-		change_meeting_infomation_init(meeting_data);
-
-		String change_successfully = "true"; 
-		try {
-			FileTool.write_file(new_meeting_infomation, MEETING_SPECIFIED_DATA_FOLDER_PATH + changed_meeting_id + '/' + "meeting_information");
-		} catch (Exception e) {
-			change_successfully = "false";
-		}
-		
-		return change_successfully;	
+		out_meeting_init(user_data);
+		String out_successfully = "OUT_SUCCESSFULLY";
+		if (!User_account_database.out_meeting(meeting_id_need_to_out, account_id_need_to_out_meeting)) 
+			out_successfully = "FAIL_TO_OUT_MEETING";
+		return out_successfully;	
 	}
 	
-	public void change_meeting_infomation_init(String meeting_data) {
-		List<String> meeting_data_list = Arrays.asList(meeting_data.split("\n"));
-		changed_meeting_id = meeting_data_list.get(0).trim();
-		new_meeting_infomation = meeting_data_list.get(1) + '\n';
-		for (int i = 2; i < meeting_data_list.size(); i ++)
-			new_meeting_infomation += meeting_data_list.get(i).trim() + '\n';
-	}
 	
-	public String send_meeting_data(String meeting_id) throws Exception {
-		general_init();
-		meeting_id = meeting_id.trim();
-		String meeting_data = "";
-		
-		try {
-			String meeting_joiner_app_activity_data_file_path = MEETING_SPECIFIED_DATA_FOLDER_PATH + meeting_id + "/joiner_app_activity/";
-			File[] files = new File(meeting_joiner_app_activity_data_file_path).listFiles();
-
-			for (int i = 0; i < files.length; i++) {
-				File file = files[i];
-				String joiner_id = file.getName();
-				String joiner_app_activity_data = "";
-				joiner_app_activity_data = FileTool.read_file(meeting_joiner_app_activity_data_file_path + joiner_id);
-
-				if (i + 1 >= files.length) {
-					meeting_data += joiner_id + '\n' + joiner_app_activity_data;
-				} else {
-					meeting_data += joiner_id + '\n' + joiner_app_activity_data + JOINER_APP_ACTIVITY_SPLIT_SIGNAL;
-				}
-			}
-		} catch (Exception e) {
-			meeting_data = "FAIL_TO_GET";
-		}
-		return meeting_data;
+	private synchronized void out_meeting_init(String user_data) {
+		List<String> user_data_list = Arrays.asList(user_data.split("\n"));
+		account_id_need_to_out_meeting = user_data_list.get(0).trim();
+		meeting_id_need_to_out = user_data_list.get(1).trim();
 	}
-	
+
 	public synchronized String receive_meeting_data(String meeting_data_recieved) throws Exception {
 		general_init();
 		receive_meeting_data_init(meeting_data_recieved);
