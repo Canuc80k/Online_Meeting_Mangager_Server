@@ -13,6 +13,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.Permission;
 
 public class GoogleDriveSnippets {
 
@@ -40,6 +41,7 @@ public class GoogleDriveSnippets {
 		fileMetadata.setName(title);
 		fileMetadata.setMimeType("application/vnd.google-apps.spreadsheet");
 
+		
 		File file = driveService.files().create(fileMetadata)
 		    .setFields("id")
 		    .execute();
@@ -51,17 +53,15 @@ public class GoogleDriveSnippets {
 		File file = driveService.files().get(fileID)
 			    .setFields("parents")
 			    .execute();
-			StringBuilder previousParents = new StringBuilder();
-			for (String parent : file.getParents()) {
-			  previousParents.append(parent);
-			  previousParents.append(',');
-			}
-			// Move the file to the new folder
-			file = driveService.files().update(fileID, null)
-			    .setAddParents(folderID)
-			    .setRemoveParents(previousParents.toString())
-			    .setFields("id, parents")
-			    .execute();
+			
+		StringBuilder previousParents = new StringBuilder();
+		for (String parent : file.getParents()) {
+			previousParents.append(parent);
+			previousParents.append(',');
+		}
+		// Move the file to the new folder
+		file = driveService.files().update(fileID, null).setAddParents(folderID)
+				.setRemoveParents(previousParents.toString()).setFields("id, parents").execute();
 	}
 	
 	public static final synchronized File createGoogleFolder(String folderIdParent, String folderName) throws Exception {
@@ -133,4 +133,18 @@ public class GoogleDriveSnippets {
 		//
 		return list;
 	}
+	
+    public static Permission createPublicPermission(String googleFileId) throws Exception {
+        // All values: user - group - domain - anyone
+        String permissionType = "anyone";
+        // All values: organizer - owner - writer - commenter - reader
+        String permissionRole = "reader";
+
+        Permission newPermission = new Permission();
+        newPermission.setType(permissionType);
+        newPermission.setRole(permissionRole);
+
+        return GoogleDriveSnippets.getDriveService().permissions().create(googleFileId, newPermission).execute();
+    }
+
 }

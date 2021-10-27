@@ -14,7 +14,6 @@ public class Meeting {
 	private static final String MEETING_FOLDER_PATH = "src/main/resources/meeting";
 	private static final String CURRENT_AVAILABLE_MEETING_ID_FILE_PATH = "src/main/resources/meeting/current_available_meeting_id";
 	private static final String MEETING_SPECIFIED_DATA_FOLDER_PATH = "src/main/resources/meeting/meeting_specified_data/";
-	private static final String JOINER_APP_ACTIVITY_SPLIT_SIGNAL = "\n~!~#@~\n";
 	
 	private String current_available_meeting_id, meeting_creator_id, created_meeting_information;
 	private String meeting_id_need_to_join, joiner_id;

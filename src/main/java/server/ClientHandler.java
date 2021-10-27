@@ -12,6 +12,7 @@ import account.Login;
 import account.Register;
 import database.Meeting_information_database;
 import database.User_account_database;
+import database.User_activity_in_meeting_database;
 import gsheet.GoogleDriveSnippets;
 import gsheet.SpreadSheetSnippets;
 import meeting.Meeting;
@@ -116,6 +117,11 @@ public class ClientHandler extends Thread {
 		
 		if (client_request_action.equals("OUT_MEETING")) {
 			toreturn = new Meeting().out_meeting(client_request_specified_data);
+			return;
+		}
+		
+		if (client_request_action.equals("GET_SPREADSHEET_ID")) {
+			toreturn = User_activity_in_meeting_database.get_meeting_spreadSheetID(client_request_specified_data);
 			return;
 		}
 	}

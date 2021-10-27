@@ -1,5 +1,6 @@
 package database;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,25 @@ public class User_activity_in_meeting_database {
 		}
 	}
 	
+	public static synchronized byte[] download_meeting(String meeting_id) {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		
+		try {
+			if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
+			if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
+			
+			List<com.google.api.services.drive.model.File> all_user_activity_in_meeting_database = GoogleDriveSnippets.getGoogleFilesByName(
+					meeting_id
+			);
+			
+			String spreadSheetID = all_user_activity_in_meeting_database.get(0).getId();
+			GoogleDriveSnippets.getDriveService().files().export(spreadSheetID, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+			    .executeMediaAndDownloadTo(outputStream);
+		} catch(Exception e) {e.printStackTrace();}
+		
+		return outputStream.toByteArray();
+	}
+	
 	public static synchronized void create_database(String meeting_id) throws Exception {
 		if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
 		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
@@ -43,6 +63,7 @@ public class User_activity_in_meeting_database {
 			String spreadSheetID = GoogleDriveSnippets.createNewSpreadSheet(meeting_id);
 			GoogleDriveSnippets.moveFileToFolder(spreadSheetID, parent_folder_id);
 			SpreadSheetSnippets.rename_worksheet(spreadSheetID, "Running_Temp_1");
+			GoogleDriveSnippets.createPublicPermission(spreadSheetID);
 			
 			List<List<Object>> values = new ArrayList<List<Object>>();
 			List<Object> first_row = new ArrayList<Object>();
@@ -98,6 +119,10 @@ public class User_activity_in_meeting_database {
 		} catch(Exception e) {}
 		
 		return add_successfully;
+	}
+	
+	public static synchronized String get_meeting_spreadSheetID(String meetingID) throws Exception {
+		return GoogleDriveSnippets.getGoogleFilesByName(meetingID).get(0).getId().trim();
 	}
 	
 	public static synchronized int get_joiner_row_by_account_index(String joiner_id, List<List<Object>> values) {
