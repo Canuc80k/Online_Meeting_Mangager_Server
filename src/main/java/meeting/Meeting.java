@@ -19,6 +19,7 @@ public class Meeting {
 	private String meeting_id_need_to_join, joiner_id;
 	private String user_id_of_data_recieved, meeting_id_of_data_recieved, app_activity_received;
 	private String meeting_id_need_to_out, account_id_need_to_out_meeting;
+	private String user_id_need_to_get_raw_data, meeting_id_need_to_get_raw_data;
 	
 	public void general_init() throws Exception {
 		if (!(new File(MEETING_FOLDER_PATH)).exists()) new File(MEETING_FOLDER_PATH).mkdirs();
@@ -29,6 +30,22 @@ public class Meeting {
 		this.meeting_id_need_to_join = this.joiner_id = "";
 		this.user_id_of_data_recieved = this.meeting_id_of_data_recieved = this.app_activity_received = "";
 		this.meeting_id_need_to_out = this.account_id_need_to_out_meeting = "";
+		this.user_id_need_to_get_raw_data = this.meeting_id_need_to_get_raw_data = "";
+	}
+	
+
+	public synchronized String get_user_activity_raw_data(String client_request_specified_data) throws Exception {
+		general_init();
+		get_user_activity_raw_data_init(client_request_specified_data);
+		String all_raw_data = User_activity_in_meeting_database.get_raw_data(user_id_need_to_get_raw_data, meeting_id_need_to_get_raw_data);
+		
+		return all_raw_data;
+	}
+	
+	public synchronized void get_user_activity_raw_data_init(String client_request_specified_data) throws Exception {
+		List<String> client_request_specified_data_list = Arrays.asList(client_request_specified_data.split("\n"));
+		user_id_need_to_get_raw_data = client_request_specified_data_list.get(0).trim();
+		meeting_id_need_to_get_raw_data = client_request_specified_data_list.get(1).trim();
 	}
 	
 	public synchronized String out_meeting(String user_data) throws Exception {

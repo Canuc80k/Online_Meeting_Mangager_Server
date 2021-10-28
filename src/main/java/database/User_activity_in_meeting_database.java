@@ -11,6 +11,8 @@ import gsheet.GoogleDriveSnippets;
 import gsheet.SpreadSheetSnippets;
 
 public class User_activity_in_meeting_database {
+	private static final String SHEET_SPLIT_SIGNAL = "\nPPPPPPPP\n";
+	
 	public enum USER_ACTIVITY_IN_MEETING_DATABASE {
 		INDEX(0),
 		TAB_CHANGE(1),
@@ -32,13 +34,38 @@ public class User_activity_in_meeting_database {
 		}
 	}
 	
+	public static synchronized String get_raw_data(String account_id, String meeting_id) throws Exception {
+		String all_raw_data = "";
+		try {
+			List<com.google.api.services.drive.model.File> all_user_activity_in_meeting_database = GoogleDriveSnippets.getGoogleFilesByName(
+					meeting_id
+			);
+			
+			String spreadSheetID = all_user_activity_in_meeting_database.get(0).getId();
+			Spreadsheet spreadSheet = SpreadSheetSnippets.getService().spreadsheets().get(spreadSheetID).execute();
+			List<Sheet> sheets = spreadSheet.getSheets();
+			
+			for (int i = 0; i < sheets.size(); i ++) {
+				String sheetName = sheets.get(i).getProperties().getTitle().trim();
+				List<List<Object>> values = SpreadSheetSnippets.getValues(spreadSheetID, sheetName).getValues();
+				String row = String.valueOf(get_joiner_row_by_account_index(account_id, values)).trim();
+				char col = (char)('A' + USER_ACTIVITY_IN_MEETING_DATABASE.RAW_DATA.get_index());
+				String cell = col + row;
+				String range = sheetName + '!' + cell + ":" + cell;
+				values = SpreadSheetSnippets.getValues(spreadSheetID, range).getValues();
+				if (values == null) continue;
+				all_raw_data += values.get(0).get(0).toString();
+				if (i + 1 < sheets.size()) all_raw_data += SHEET_SPLIT_SIGNAL;
+			}
+		} catch (Exception e) {e.printStackTrace();}
+		
+		return all_raw_data;
+	}
+	
 	public static synchronized byte[] download_meeting(String meeting_id) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
 		try {
-			if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
-			if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
-			
 			List<com.google.api.services.drive.model.File> all_user_activity_in_meeting_database = GoogleDriveSnippets.getGoogleFilesByName(
 					meeting_id
 			);
@@ -52,9 +79,6 @@ public class User_activity_in_meeting_database {
 	}
 	
 	public static synchronized void create_database(String meeting_id) throws Exception {
-		if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
-		if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
-			
 		String parent_folder_id;
 		try {parent_folder_id = GoogleDriveSnippets.getGoogleSubFolderByName(null, "User Activity In Meeting").get(0).getId();} 
 		catch (Exception e) {parent_folder_id = GoogleDriveSnippets.createGoogleFolder(null, "User Activity In Meeting").getId();}
@@ -76,9 +100,6 @@ public class User_activity_in_meeting_database {
 	public static synchronized boolean add_new_joiner_to_database(String meeting_id_need_to_join, String joiner_id) {
 		boolean add_successfully = false;
 		try {
-			if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
-			if (SpreadSheetSnippets.getService() == null) SpreadSheetSnippets.createService();
-			
 			List<com.google.api.services.drive.model.File> all_user_activity_in_meeting_database = GoogleDriveSnippets.getGoogleFilesByName(
 					meeting_id_need_to_join
 			);

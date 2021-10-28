@@ -124,6 +124,11 @@ public class ClientHandler extends Thread {
 			toreturn = User_activity_in_meeting_database.get_meeting_spreadSheetID(client_request_specified_data);
 			return;
 		}
+		
+		if (client_request_action.equals("GET_USER_ACTIVITY_RAW_DATA")) {
+			toreturn = new Meeting().get_user_activity_raw_data(client_request_specified_data);
+			return;
+		}
 	}
 	
 	public static List<String> get_client_request_data(String data_received) {
