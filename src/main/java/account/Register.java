@@ -20,7 +20,7 @@ public class Register {
 			try {
 				String previous_index = get_previous_index();
 				String current_index = String.valueOf(Integer.parseInt(previous_index) + 1);
-				List<Object> register_data_list = Arrays.asList(register_data.split("\n"));
+				List<String> register_data_list = Arrays.asList(register_data.split("\n"));
 
 				List<Object> new_row = new ArrayList<Object>();
 				new_row.add(current_index);
