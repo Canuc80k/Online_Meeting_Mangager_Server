@@ -17,7 +17,9 @@ public class User_activity_in_meeting_database {
 		INDEX(0),
 		TAB_CHANGE(1),
 		APP_CHANGE(2),
-		RAW_DATA(3);
+		APP_TIME_USAGE(3),
+		APP_USAGE_RAW_DATA(4),
+		CLIPBOARD_USAGE(5);
 
 		private int index;
 		
@@ -30,7 +32,7 @@ public class User_activity_in_meeting_database {
 		}
 		
 		public static String get_last_column() {
-			return "D";
+			return "F";
 		}
 	}
 	
@@ -49,7 +51,7 @@ public class User_activity_in_meeting_database {
 				String sheetName = sheets.get(i).getProperties().getTitle().trim();
 				List<List<Object>> values = SpreadSheetSnippets.getValues(spreadSheetID, sheetName).getValues();
 				String row = String.valueOf(get_joiner_row_by_account_index(account_id, values)).trim();
-				char col = (char)('A' + USER_ACTIVITY_IN_MEETING_DATABASE.RAW_DATA.get_index());
+				char col = (char)('A' + USER_ACTIVITY_IN_MEETING_DATABASE.APP_USAGE_RAW_DATA.get_index());
 				String cell = col + row;
 				String range = sheetName + '!' + cell + ":" + cell;
 				values = SpreadSheetSnippets.getValues(spreadSheetID, range).getValues();
@@ -91,7 +93,12 @@ public class User_activity_in_meeting_database {
 			
 			List<List<Object>> values = new ArrayList<List<Object>>();
 			List<Object> first_row = new ArrayList<Object>();
-			first_row.add("ID"); first_row.add("Số Lần Chuyển Tab"); first_row.add("Số Lần Chuyển App"); first_row.add("Dữ Liệu Thô");
+			first_row.add("ID");
+			first_row.add("Số Lần Chuyển Tab"); 
+			first_row.add("Số Lần Chuyển App"); 
+			first_row.add("Thời Gian Sử Dụng Các App");
+			first_row.add("Dữ Liệu Sử Dụng App Thô");
+			first_row.add("Dữ Liệu Clipboard");
 			values.add(first_row);
 			SpreadSheetSnippets.appendValues(spreadSheetID, "Running_Temp_1", "RAW", values);
 		} catch (Exception e) {e.printStackTrace();}
@@ -119,7 +126,7 @@ public class User_activity_in_meeting_database {
 		return add_successfully;
 	}
 
-	public static synchronized boolean add_raw_data(String spreadSheetID, String joiner_id, String raw_data) {
+	public static synchronized boolean update_joiner_data_row(String spreadSheetID, String joiner_id, List<Object> update_row_value) {
 		boolean add_successfully = false;
 		
 		try {
@@ -127,14 +134,9 @@ public class User_activity_in_meeting_database {
 			String sheetName = sheets.get(sheets.size() - 1).getProperties().getTitle();
 			List<List<Object>> values = SpreadSheetSnippets.getValues(spreadSheetID, sheetName).getValues();
 			String row = String.valueOf(get_joiner_row_by_account_index(joiner_id, values));
-			String range = sheetName + "!" + "A" + row + ":" + USER_ACTIVITY_IN_MEETING_DATABASE.get_last_column() + row;
+			String range = sheetName + "!" + "B" + row + ":" + USER_ACTIVITY_IN_MEETING_DATABASE.get_last_column() + row;
 			List<List<Object>> new_values = new ArrayList<List<Object>>();
-			List<Object> update_row = new ArrayList<Object>();
-			update_row.add(joiner_id);
-			update_row.add("0");
-			update_row.add("0");
-			update_row.add(raw_data);
-			new_values.add(update_row);
+			new_values.add(update_row_value);
 			SpreadSheetSnippets.batchUpdateValues(spreadSheetID, range, "RAW", new_values);
 			add_successfully = true;
 		} catch(Exception e) {}

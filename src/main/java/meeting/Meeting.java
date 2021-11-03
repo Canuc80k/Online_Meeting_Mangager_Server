@@ -1,6 +1,7 @@
 package meeting;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class Meeting {
 	private static final String MEETING_FOLDER_PATH = "src/main/resources/meeting";
 	private static final String CURRENT_AVAILABLE_MEETING_ID_FILE_PATH = "src/main/resources/meeting/current_available_meeting_id";
 	private static final String MEETING_SPECIFIED_DATA_FOLDER_PATH = "src/main/resources/meeting/meeting_specified_data/";
+	private static final String COLUMN_SPLIT_SIGNAL = "\nsadwffws\n";
 	
 	private String current_available_meeting_id, meeting_creator_id, created_meeting_information;
 	private String meeting_id_need_to_join, joiner_id;
@@ -32,7 +34,6 @@ public class Meeting {
 		this.meeting_id_need_to_out = this.account_id_need_to_out_meeting = "";
 		this.user_id_need_to_get_raw_data = this.meeting_id_need_to_get_raw_data = "";
 	}
-	
 
 	public synchronized String get_user_activity_raw_data(String client_request_specified_data) throws Exception {
 		general_init();
@@ -70,7 +71,12 @@ public class Meeting {
 		String spreadSheetID = GoogleDriveSnippets.getGoogleFilesByName(meeting_id_of_data_recieved).get(0).getId().trim();
 		
 		String receive_successfully = "SERVER_RECEIVE_JOINER_APP_ACTIVITY_SUCCESSFULLY";
-		if (!User_activity_in_meeting_database.add_raw_data(spreadSheetID, user_id_of_data_recieved, app_activity_received)) 
+		List<String> app_activity_received_list = Arrays.asList(app_activity_received.split(COLUMN_SPLIT_SIGNAL));
+		List<Object> app_activity_received_object_list = new ArrayList<Object>();
+		for (int i = 0; i < app_activity_received_list.size(); i ++)
+			app_activity_received_object_list.add(app_activity_received_list.get(i));
+		
+		if (!User_activity_in_meeting_database.update_joiner_data_row(spreadSheetID, user_id_of_data_recieved, app_activity_received_object_list)) 
 			receive_successfully = "FAIL_TO_RECEIVE_JOINER_APP_ACTIVITY";
 		return receive_successfully;
 	}
