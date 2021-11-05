@@ -13,7 +13,6 @@ public class Server {
 				socket = serverSocket.accept();
 				new ServerThread(socket).start();
 			}
-			
 		} catch (Exception e) {
 			socket.close();
 			e.printStackTrace(); 
