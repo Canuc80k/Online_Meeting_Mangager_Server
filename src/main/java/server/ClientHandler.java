@@ -13,6 +13,7 @@ import account.Register;
 import database.Meeting_information_database;
 import database.User_account_database;
 import database.User_activity_in_meeting_database;
+import datapack.Datapack_receiver;
 import gsheet.GoogleDriveSnippets;
 import gsheet.SpreadSheetSnippets;
 import meeting.Meeting;
@@ -127,6 +128,16 @@ public class ClientHandler extends Thread {
 		
 		if (client_request_action.equals("GET_USER_ACTIVITY_RAW_DATA")) {
 			toreturn = new Meeting().get_user_activity_raw_data(client_request_specified_data);
+			return;
+		}
+
+		if (client_request_action.equals("SEND_DATAPACK")) {
+			toreturn = new Datapack_receiver().save_datapack_to_cache(client_request_specified_data);
+			return;
+		}
+		
+		if (client_request_action.equals("REVEIVE_DATAPACK")) {
+			// toreturn = ;
 			return;
 		}
 	}
