@@ -70,9 +70,12 @@ public class Meeting {
 		receive_meeting_data_init(meeting_data_recieved);
 		String spreadSheetID = GoogleDriveSnippets.getGoogleFilesByName(meeting_id_of_data_recieved).get(0).getId().trim();
 		
+		System.out.println(meeting_data_recieved);
 		String receive_successfully = "SERVER_RECEIVE_JOINER_APP_ACTIVITY_SUCCESSFULLY";
 		List<String> app_activity_received_list = Arrays.asList(app_activity_received.split(COLUMN_SPLIT_SIGNAL));
 		List<Object> app_activity_received_object_list = new ArrayList<Object>();
+		
+		System.out.println(app_activity_received_list.size());
 		for (int i = 0; i < app_activity_received_list.size(); i ++)
 			app_activity_received_object_list.add(app_activity_received_list.get(i));
 		

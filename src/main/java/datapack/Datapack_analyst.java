@@ -50,7 +50,6 @@ public class Datapack_analyst {
             List<String> temp1_list = Arrays.asList(temp_app_title.split(" - "));
             app_name = temp1_list.get(temp1_list.size() - 1).trim();
         }
-        System.out.println(app_name);
 
         for (int i = prev_log_list.size(); i < cur_log_list.size(); i ++) {
             try {
