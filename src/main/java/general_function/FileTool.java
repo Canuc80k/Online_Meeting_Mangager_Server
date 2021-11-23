@@ -13,7 +13,7 @@ import java.io.Writer;
  */
 
 public class FileTool {
-	public static String read_file(String path) throws Exception {
+	public static synchronized String read_file(String path) throws Exception {
 		String result = "";
 
 		BufferedReader reader = new BufferedReader(new FileReader(path));
