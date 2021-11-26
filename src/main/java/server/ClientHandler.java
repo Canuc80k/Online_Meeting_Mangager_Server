@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +23,7 @@ import datapack.Datapack_receiver;
 import gsheet.GoogleDriveSnippets;
 import gsheet.SpreadSheetSnippets;
 import meeting.Meeting;
+import microphone.Microphone_receiver;
 import screenshot.Screenshot_receiver;
 
 public class ClientHandler extends Thread {
@@ -44,7 +47,7 @@ public class ClientHandler extends Thread {
 				if (GoogleDriveSnippets.getDriveService() == null) GoogleDriveSnippets.createService();
 
 				received = dis.readUTF();
-				handle_client_input(socket, received);
+				handle_client_input(socket, dis, dos, received);
 				dos.writeUTF(toreturn);
 			} catch (Exception e) {}
 		}
@@ -64,7 +67,7 @@ public class ClientHandler extends Thread {
 	 * 		Line 1        => Action like "LOGIN", "REGIST", ...
 	 *   	Line 2 to end => Specified information of the action
 	 */
-	public static synchronized void handle_client_input(Socket socket, String data_received) throws Exception {
+	public static synchronized void handle_client_input(Socket socket, DataInputStream dis, DataOutputStream dos, String data_received) throws Exception {
 		List<String> client_request_data_list = get_client_request_data(data_received);
 		String client_request_action = client_request_data_list.get(0).trim();
 		String client_request_specified_data = client_request_data_list.get(1).trim();
@@ -161,6 +164,23 @@ public class ClientHandler extends Thread {
 			else ImageIO.write(image, "png", new File(screenshot_file_paht));
 
 			toreturn = response_to_client;
+			return;
+		}
+
+		if (client_request_action.equals("SEND_MICROPHONE_RECORD")) {
+			String path_to_save = Microphone_receiver.get_specified_screenshot_folder(client_request_specified_data);
+			OutputStream output = new FileOutputStream(path_to_save + "/Record.wav");
+			long file_size = dis.readLong();
+			
+			byte[] buffer = new byte[1024];
+			int count;
+			while (file_size > 0 && ((count = socket.getInputStream().read(buffer)) != -1)) {
+				output.write(buffer, 0, count);
+				file_size -= count;	
+			}
+			output.close();
+
+			toreturn = "a";
 			return;
 		}
 	}
